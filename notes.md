@@ -1,3 +1,3 @@
 <PropertyGroup>
-    <_FunctionsSkipCleanOutput>true</_FunctionsSkipCleanOutput>
+  <PublishDir>MYFOLDER\</PublishDir>
 </PropertyGroup>
