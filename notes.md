@@ -19,44 +19,32 @@ COPY --from=publish /app/publish .
 # Créer le répertoire pour les certificats
 RUN mkdir -p /certs
 
-# Script de démarrage qui convertit CRT+KEY en PFX
-COPY <<'EOF' /app/start.sh
-#!/bin/bash
-set -e
-
-# Chemins des certificats
-CRT_FILE="${CRT_FILE:-/certs/tls.crt}"
-KEY_FILE="${KEY_FILE:-/certs/tls.key}"
-PFX_FILE="${PFX_FILE:-/certs/certificate.pfx}"
-PFX_PASSWORD="${PFX_PASSWORD:-}"
-
-# Vérifier si les fichiers existent
-if [ -f "$CRT_FILE" ] && [ -f "$KEY_FILE" ]; then
-    echo "Converting CRT and KEY to PFX..."
-    
-    # Conversion avec OpenSSL (sans mot de passe si PFX_PASSWORD est vide)
-    if [ -z "$PFX_PASSWORD" ]; then
-        openssl pkcs12 -export -out "$PFX_FILE" \
-            -inkey "$KEY_FILE" \
-            -in "$CRT_FILE" \
-            -passout pass:
-    else
-        openssl pkcs12 -export -out "$PFX_FILE" \
-            -inkey "$KEY_FILE" \
-            -in "$CRT_FILE" \
-            -passout pass:"$PFX_PASSWORD"
-    fi
-    
-    echo "PFX certificate created at $PFX_FILE"
-else
-    echo "Warning: Certificate files not found, skipping PFX conversion"
-fi
-
-# Lancer l'application .NET
-exec dotnet MonApplication.dll "$@"
-EOF
-
-RUN chmod +x /app/start.sh
+# Créer le script de démarrage
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Chemins des certificats avec valeurs par défaut' >> /app/start.sh && \
+    echo 'CRT_FILE="${CRT_FILE:-/certs/tls.crt}"' >> /app/start.sh && \
+    echo 'KEY_FILE="${KEY_FILE:-/certs/tls.key}"' >> /app/start.sh && \
+    echo 'PFX_FILE="${PFX_FILE:-/certs/certificate.pfx}"' >> /app/start.sh && \
+    echo 'PFX_PASSWORD="${PFX_PASSWORD:-}"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Vérifier si les fichiers existent' >> /app/start.sh && \
+    echo 'if [ -f "$CRT_FILE" ] && [ -f "$KEY_FILE" ]; then' >> /app/start.sh && \
+    echo '    echo "Converting CRT and KEY to PFX..."' >> /app/start.sh && \
+    echo '    if [ -z "$PFX_PASSWORD" ]; then' >> /app/start.sh && \
+    echo '        openssl pkcs12 -export -out "$PFX_FILE" -inkey "$KEY_FILE" -in "$CRT_FILE" -passout pass:' >> /app/start.sh && \
+    echo '    else' >> /app/start.sh && \
+    echo '        openssl pkcs12 -export -out "$PFX_FILE" -inkey "$KEY_FILE" -in "$CRT_FILE" -passout pass:"$PFX_PASSWORD"' >> /app/start.sh && \
+    echo '    fi' >> /app/start.sh && \
+    echo '    echo "PFX certificate created at $PFX_FILE"' >> /app/start.sh && \
+    echo 'else' >> /app/start.sh && \
+    echo '    echo "Warning: Certificate files not found, skipping PFX conversion"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Lancer application .NET' >> /app/start.sh && \
+    echo 'exec dotnet MonApplication.dll "$@"' >> /app/start.sh && \
+    chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]
 CMD ["--urls=https://+:8443", \
