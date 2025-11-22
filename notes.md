@@ -1,11 +1,13 @@
-# 1. Créer un ConfigMap vide avec l'annotation magique
-oc create configmap trusted-ca
-
-# 2. Ajouter l'annotation pour que OpenShift injecte le CA automatiquement
-oc annotate configmap trusted-ca service.beta.openshift.io/inject-cabundle=true
-
-# 3. Attendre quelques secondes que OpenShift injecte le CA
-sleep 5
-
-# 4. Extraire le CA dans un fichier
-oc get configmap trusted-ca -o jsonpath='{.data.service-ca\.crt}' > service-ca.crt
+echo "Copying existing truststore..."
+            cp /existing-truststore/truststore.jks /merged-truststore/truststore.jks
+            
+            echo "Adding OpenShift CA to truststore..."
+            keytool -import -trustcacerts \
+              -alias openshift-service-ca \
+              -file /ca-bundle/service-ca.crt \
+              -keystore /merged-truststore/truststore.jks \
+              -storepass changeit \
+              -noprompt
+            
+            echo "Truststore updated successfully"
+            keytool -list -keystore /merged-truststore/truststore.jks -storepass changeit
