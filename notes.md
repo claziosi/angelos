@@ -1,16 +1,18 @@
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: 'my-service-b'
-  namespace: '{{ meta.namespace }}'
-  labels:
-    app: my-serviceb
-  annotations:
-    service.beta.openshift.io/serving-cert-secret-name: serviceb-certs
+  name: mon-app
 spec:
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-      name: serviceb
-  selector:
+  template:
+    spec:
+      containers:
+      - name: mon-conteneur
+        image: mon-image
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/tls/private
+          readOnly: true
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: mon-service-certs
