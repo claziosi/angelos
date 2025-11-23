@@ -14,3 +14,14 @@ else
 fi
 
 echo "✓ CA installé"
+
+
+
+
+  # Copier le CA depuis le ConfigMap
+  cp /ca-source/ca.crt /etc/pki/ca-trust/source/anchors/openshift-ca.crt
+  
+  # Mettre à jour le trust store
+  update-ca-trust extract
+  
+  echo "✓ CA installé avec succès"
