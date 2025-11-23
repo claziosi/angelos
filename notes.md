@@ -1,13 +1,16 @@
-echo "Copying existing truststore..."
-            cp /existing-truststore/truststore.jks /merged-truststore/truststore.jks
+# Créer les répertoires nécessaires
+            mkdir -p /ca-trust/anchors
+            mkdir -p /ca-trust/bundle
             
-            echo "Adding OpenShift CA to truststore..."
-            keytool -import -trustcacerts \
-              -alias openshift-service-ca \
-              -file /ca-bundle/service-ca.crt \
-              -keystore /merged-truststore/truststore.jks \
-              -storepass changeit \
-              -noprompt
+            # Copier le CA
+            cp /ca-source/ca.crt /ca-trust/anchors/openshift-ca.crt
             
-            echo "Truststore updated successfully"
-            keytool -list -keystore /merged-truststore/truststore.jks -storepass changeit
+            # Copier le bundle CA système existant et ajouter le nôtre
+            if [ -f /etc/pki/tls/certs/ca-bundle.crt ]; then
+              cp /etc/pki/tls/certs/ca-bundle.crt /ca-trust/bundle/ca-bundle.crt
+              cat /ca-source/ca.crt >> /ca-trust/bundle/ca-bundle.crt
+            else
+              cp /ca-source/ca.crt /ca-trust/bundle/ca-bundle.crt
+            fi
+            
+            echo "✓ CA installé"
