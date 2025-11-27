@@ -1,7 +1,7 @@
 {
   "name": "Custom Health Check API",
   "version": "1.0.0",
-  "description": "Mock API with customizable text response",
+  "description": "Mock API with customizable text response - No backend needed",
   "visibility": "PUBLIC",
   "gravitee": "2.0.0",
   "flow_mode": "DEFAULT",
@@ -37,8 +37,8 @@
         "name": "default-group",
         "endpoints": [
           {
-            "name": "mock-endpoint",
-            "target": "https://api.gravitee.io/echo",
+            "name": "dummy-endpoint",
+            "target": "https://httpbin.org/status/200",
             "weight": 1,
             "backup": false,
             "type": "http",
@@ -71,13 +71,10 @@
       "condition": "",
       "consumers": [],
       "methods": ["GET"],
-      "pre": [],
-      "post": [],
-      "enabled": true,
-      "response": [
+      "pre": [
         {
-          "name": "Mock Response",
-          "description": "Return custom health status",
+          "name": "Mock Response - Skip Backend",
+          "description": "Return mock response without calling backend",
           "enabled": true,
           "policy": "mock",
           "configuration": {
@@ -86,15 +83,22 @@
               {
                 "name": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-cache"
               }
             ],
-            "content": "{\"status\":\"UP\",\"message\":\"Gravitee Gateway is healthy\",\"timestamp\":\"{#now()}\",\"service\":\"gravitee-gateway\",\"custom_text\":\"Votre texte personnalise ici\"}"
+            "content": "{\"status\":\"UP\",\"message\":\"Service is healthy\",\"timestamp\":\"{#now()}\",\"service\":\"gravitee-gateway\",\"custom_text\":\"Votre texte personnalise ici\",\"details\":{\"environment\":\"production\",\"checks\":{\"gateway\":\"UP\",\"backend\":\"UP\"}}}"
           }
         }
-      ]
+      ],
+      "post": [],
+      "enabled": true,
+      "response": []
     },
     {
-      "name": "Status Flow",
+      "name": "Status Text Flow",
       "path-operator": {
         "path": "/status",
         "operator": "EQUALS"
@@ -102,10 +106,7 @@
       "condition": "",
       "consumers": [],
       "methods": ["GET"],
-      "pre": [],
-      "post": [],
-      "enabled": true,
-      "response": [
+      "pre": [
         {
           "name": "Status Mock",
           "enabled": true,
@@ -121,7 +122,10 @@
             "content": "Service operationnel - Tous les systemes fonctionnent normalement"
           }
         }
-      ]
+      ],
+      "post": [],
+      "enabled": true,
+      "response": []
     },
     {
       "name": "Info Flow",
@@ -132,10 +136,7 @@
       "condition": "",
       "consumers": [],
       "methods": ["GET"],
-      "pre": [],
-      "post": [],
-      "enabled": true,
-      "response": [
+      "pre": [
         {
           "name": "Info Mock",
           "enabled": true,
@@ -148,10 +149,13 @@
                 "value": "application/json"
               }
             ],
-            "content": "{\"application\":\"Gravitee API Gateway\",\"description\":\"Texte personnalise pour les informations\",\"build_date\":\"{#now()}\",\"endpoints\":{\"/\":\"Health check principal\",\"/status\":\"Status texte simple\",\"/info\":\"Informations detaillees\"},\"maintenance\":false}"
+            "content": "{\"application\":\"Gravitee API Gateway\",\"description\":\"Informations systeme personnalisees\",\"version\":\"1.0.0\",\"build_date\":\"{#now()}\",\"endpoints\":{\"/\":\"Health check principal\",\"/status\":\"Status texte simple\",\"/info\":\"Informations detaillees\"},\"maintenance\":false,\"custom_message\":\"Modifiez ce texte selon vos besoins\"}"
           }
         }
-      ]
+      ],
+      "post": [],
+      "enabled": true,
+      "response": []
     }
   ],
   "response_templates": {}
