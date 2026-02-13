@@ -1,40 +1,20 @@
-Voici une commande simple et complète pour monter un partage Windows :
+# Créer un dossier temporaire
+mkdir -p /tmp/cifs-package
 
-```bash
-mount -t cifs //192.168.1.100/partage /mnt/shared-drive \
-  -o username=utilisateur,password=motdepasse,vers=3.0
-```
+# Copier les binaires
+cp /sbin/mount.cifs /tmp/cifs-package/
+cp /usr/bin/cifscreds /tmp/cifs-package/ 2>/dev/null || true
 
-## Décomposition
+# Identifier les librairies nécessaires
+ldd /sbin/mount.cifs
 
-- `//192.168.1.100/partage` → Votre serveur Windows et nom du partage
-- `/mnt/shared-drive` → Point de montage (créez le dossier avant si nécessaire)
-- `username=utilisateur` → Votre nom d'utilisateur Windows
-- `password=motdepasse` → Votre mot de passe
-- `vers=3.0` → Version SMB (3.0 pour Windows récents)
+# Copier les librairies dépendantes (ajustez selon votre ldd)
+mkdir -p /tmp/cifs-package/lib
+cp /lib/x86_64-linux-gnu/libcap.so.* /tmp/cifs-package/lib/ 2>/dev/null || true
+cp /lib/x86_64-linux-gnu/libkeyutils.so.* /tmp/cifs-package/lib/ 2>/dev/null || true
+cp /lib/x86_64-linux-gnu/libtalloc.so.* /tmp/cifs-package/lib/ 2>/dev/null || true
+cp /lib/x86_64-linux-gnu/libwbclient.so.* /tmp/cifs-package/lib/ 2>/dev/null || true
 
-## Commande complète avec création du dossier
-
-```bash
-mkdir -p /mnt/shared-drive && \
-mount -t cifs //192.168.1.100/partage /mnt/shared-drive \
-  -o username=utilisateur,password=motdepasse,vers=3.0
-```
-
-## Avec domaine Active Directory
-
-```bash
-mount -t cifs //serveur/partage /mnt/shared-drive \
-  -o username='DOMAINE\utilisateur',password=motdepasse,vers=3.0
-```
-
-## Version robuste (gestion des erreurs)
-
-```bash
-mount -t cifs //192.168.1.100/partage /mnt/shared-drive \
-  -o username=utilisateur,password=motdepasse,vers=3.0,uid=1000,gid=1000,file_mode=0777,dir_mode=0777
-```
-
-Les options `uid`, `gid`, `file_mode`, `dir_mode` assurent que votre application .NET peut lire/écrire les fichiers.
-
-Remplacez simplement l'IP, le nom du partage et les credentials par les vôtres !
+# Créer une archive
+cd /tmp
+tar -czf cifs-utils.tar.gz cifs-package/
